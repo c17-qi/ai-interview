@@ -405,6 +405,14 @@
     <!-- 注册面板 -->
     <div class="login-box hidden" id="registerBox">
       <h2>注册 新账号</h2>
+      <div class="avatar-grid" id="regAvatarGrid">
+        <div class="avatar-opt selected" data-avatar="🐶">🐶</div>
+        <div class="avatar-opt" data-avatar="🐕">🐕</div>
+        <div class="avatar-opt" data-avatar="🦮">🦮</div>
+        <div class="avatar-opt" data-avatar="🐩">🐩</div>
+        <div class="avatar-opt" data-avatar="🐾">🐾</div>
+        <div class="avatar-opt" data-avatar="🐺">🐺</div>
+      </div>
       <input type="text" id="regUsername" placeholder="设置新用户名" />
       <input type="password" id="regPassword" placeholder="设置密码 (最少4位)" />
       <button class="btn-login" id="registerBtn">确 认 注 册</button>
@@ -835,6 +843,9 @@
       micBtn.addEventListener("click", () => {
         isVoiceMode = true;
         voiceOverlay.classList.remove("hidden");
+        let userAvatars = JSON.parse(localStorage.getItem('ai_users_avatar') || '{}');
+        let avatar = userAvatars[currentUsername] || "🐶";
+        voiceAvatar.textContent = avatar;
         startRec();
       });
       endCallBtn.addEventListener("click", () => {
@@ -865,6 +876,16 @@
     const loginBtnUI = document.getElementById("loginBtn");
     const registerBtnUI = document.getElementById("registerBtn");
     const userDisplay = document.getElementById("userDisplay");
+    
+    let selectedAvatar = "🐶";
+    document.querySelectorAll("#regAvatarGrid .avatar-opt").forEach(opt => {
+      opt.addEventListener("click", () => {
+        document.querySelectorAll("#regAvatarGrid .avatar-opt").forEach(o => o.classList.remove("selected"));
+        opt.classList.add("selected");
+        selectedAvatar = opt.getAttribute("data-avatar");
+      });
+    });
+
     const logoutBtn = document.getElementById("logoutBtn");
     
     // Sidebar elements
@@ -962,7 +983,9 @@
     function checkLoginState() {
       if (currentUsername) {
         loginOverlay.classList.add("hidden");
-        userDisplay.textContent = currentUsername;
+        let userAvatars = JSON.parse(localStorage.getItem('ai_users_avatar') || '{}');
+        let avatar = userAvatars[currentUsername] || "🐶";
+        userDisplay.innerHTML = `<span class="user-avatar-disp">` + avatar + `</span>` + currentUsername;
         initSessions();
       } else {
         loginOverlay.classList.remove("hidden");
@@ -1008,6 +1031,11 @@
       // 注册逻辑
       users[u] = p;
       localStorage.setItem('ai_users_db', JSON.stringify(users));
+
+      let userAvatars = JSON.parse(localStorage.getItem('ai_users_avatar') || '{}');
+      userAvatars[u] = selectedAvatar;
+      localStorage.setItem('ai_users_avatar', JSON.stringify(userAvatars));
+
       alert("注册成功！马上为您自动登录。");
       
       currentUsername = u;
