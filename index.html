@@ -106,12 +106,38 @@
     .input-wrapper {
       padding: 6px 16px 16px;
       background: #f9feff;
-      display: grid;
-      grid-template-columns: 1fr auto;
-      gap: 10px;
-      align-items: end;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
     }
-    .input-wrapper textarea {
+    .input-actions-bar {
+      display: flex;
+      gap: 12px;
+      padding: 0 4px;
+    }
+    .input-actions-bar button {
+      background: none;
+      border: none;
+      color: #555;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 4px;
+      border-radius: 50%;
+      transition: all 0.2s;
+    }
+    .input-actions-bar button:hover {
+      background: #e8eff3;
+      color: #1569ab;
+    }
+    .input-container-row {
+      display: flex;
+      gap: 10px;
+      align-items: flex-end;
+    }
+    .input-container-row textarea {
+      flex: 1;
       max-height: 120px;
       min-height: 48px;
       resize: none;
@@ -124,7 +150,7 @@
       box-shadow: inset 0 1px 3px rgba(0,0,0,.04);
       transition: all 0.2s;
     }
-    .input-wrapper textarea:focus { outline: none; border-color: #82b9d5; box-shadow: 0 0 0 3px rgba(130,185,213,0.15); }
+    .input-container-row textarea:focus { outline: none; border-color: #82b9d5; box-shadow: 0 0 0 3px rgba(130,185,213,0.15); }
     
     .controls {
       display: flex;
@@ -136,7 +162,7 @@
     }
     .controls label { font-size: 0.8rem; color: #2f4f5f; }
     .controls input[type=range] { width: 90px; }
-    .input-wrapper button, .bottom-btn {
+    .input-container-row button, .bottom-btn {
       border-radius: 10px;
       border: none;
       background: linear-gradient(135deg,#1c7dbf,#1569ab);
@@ -148,7 +174,7 @@
       box-shadow: 0 4px 10px rgba(21,105,171,.2);
       font-size: 0.95rem;
     }
-    .input-wrapper button:hover, .bottom-btn:hover {
+    .input-container-row button:hover, .bottom-btn:hover {
       transform: translateY(-1px);
       box-shadow: 0 6px 14px rgba(21,105,171,.3);
     }
@@ -363,12 +389,6 @@
       </h1>
       <span class="tag">AI 面试模拟</span>
       <div class="header-right">
-        <button class="icon-btn" id="muteBtn" title="静音 (关闭语音播报)">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
-        </button>
-        <button class="icon-btn" id="micBtn" title="开启语音通话">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
-        </button>
         <span class="user-tag" id="userDisplay"></span>
         <button class="logout-btn" id="logoutBtn">退出登录</button>
       </div>
@@ -384,8 +404,21 @@
       <span class="prompt-chip">🎓 考研复试面试</span>
     </div>
     <section class="input-wrapper">
-      <textarea id="userInput" placeholder="说点什么... 回车发送"></textarea>
-      <button id="sendBtn">发送</button>
+      <div class="input-actions-bar">
+        <button class="icon-btn" id="sttBtn" title="语音输入" style="width: auto; height: auto;">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>
+        </button>
+        <button class="icon-btn" id="muteBtn" title="静音 (关闭语音播报)" style="width: auto; height: auto;">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
+        </button>
+        <button class="icon-btn" id="micBtn" title="开启语音通话" style="width: auto; height: auto;">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+        </button>
+      </div>
+      <div class="input-container-row">
+        <textarea id="userInput" placeholder="说点什么... 回车发送"></textarea>
+        <button id="sendBtn">发送</button>
+      </div>
       <div class="bottom-row">
         <span class="status" id="statusLabel">空闲</span>
       </div>
@@ -396,6 +429,7 @@
     const chatArea = document.getElementById("chatArea");
     const input = document.getElementById("userInput");
     const sendBtn = document.getElementById("sendBtn");
+    const sttBtn = document.getElementById("sttBtn");
     const statusLabel = document.getElementById("statusLabel");
     const speechRate = document.getElementById("speechRate");
     const rateVal = document.getElementById("rateVal");
@@ -405,6 +439,47 @@
     const voiceStatus = document.getElementById("voiceStatus");
     const voiceAvatar = document.getElementById("voiceAvatar");
     const endCallBtn = document.getElementById("endCallBtn");
+
+    let sttActive = false;
+    let sttRecognition;
+    if('webkitSpeechRecognition' in window) {
+      sttRecognition = new webkitSpeechRecognition();
+      sttRecognition.continuous = false;
+      sttRecognition.interimResults = false;
+      sttRecognition.lang = 'zh-CN';
+      
+      sttRecognition.onstart = () => {
+        sttActive = true;
+        sttBtn.style.color = '#ef5350';
+        input.placeholder = '正在聆听... (请说话)';
+      };
+      
+      sttRecognition.onresult = (event) => {
+        const transcript = event.results[0][0].transcript;
+        input.value += transcript;
+      };
+      
+      sttRecognition.onerror = (event) => {
+        console.error('STT error', event.error);
+        statusLabel.textContent = "语音识别错误: " + event.error;
+      };
+      
+      sttRecognition.onend = () => {
+        sttActive = false;
+        sttBtn.style.color = '#555';
+        input.placeholder = '说点什么... 回车发送';
+      };
+      
+      sttBtn.addEventListener('click', () => {
+        if(sttActive) {
+          sttRecognition.stop();
+        } else {
+          sttRecognition.start();
+        }
+      });
+    } else {
+      sttBtn.style.display = 'none'; // Platform not supported
+    }
 
     let recognition;
     let isLoading = false;
@@ -776,7 +851,7 @@
     function checkLoginState() {
       if (currentUsername) {
         loginOverlay.classList.add("hidden");
-        userDisplay.textContent = `你好, ${currentUsername}`;
+        userDisplay.textContent = currentUsername;
         initSessions();
       } else {
         loginOverlay.classList.remove("hidden");
