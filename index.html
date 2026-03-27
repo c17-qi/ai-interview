@@ -171,8 +171,14 @@
       padding: 6px;
       border-radius: 50%;
       transition: all 0.2s;
+      outline: none;
+      -webkit-tap-highlight-color: transparent;
     }
-    .stt-in-input:hover { background: #e8eff3; color: #1569ab; }
+    .stt-in-input:hover, .stt-in-input:focus, .stt-in-input:active {
+      background: transparent;
+      color: #1569ab;
+      outline: none;
+    }
     
     .controls {
       display: flex;
