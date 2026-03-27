@@ -253,9 +253,59 @@
       padding: 5px 12px; border-radius: 20px; cursor: pointer; font-size: 0.8rem; font-weight: bold; transition: 0.2s;
     }
     .logout-btn:hover { background: #fff1f0; border-color: #ffa39e; }
+    .sidebar {
+      position: fixed; top: 0; left: -260px; width: 260px; height: 100vh;
+      background: #f9feff; box-shadow: 2px 0 12px rgba(0,0,0,0.1);
+      z-index: 1050; transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1); display: flex; flex-direction: column;
+    }
+    .sidebar.open { left: 0; }
+    .sidebar-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.4); backdrop-filter: blur(2px); z-index: 1040;
+      opacity: 0; pointer-events: none; transition: opacity 0.3s;
+    }
+    .sidebar-overlay.open { opacity: 1; pointer-events: auto; }
+    .sidebar-header { padding: 20px 16px; border-bottom: 1px solid #e6edf1; }
+    .new-chat-btn {
+      width: 100%; padding: 10px; background: #1569ab; border: none;
+      border-radius: 10px; color: #fff; font-weight: 600; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; gap: 6px;
+      transition: all 0.2s; box-shadow: 0 4px 10px rgba(21,105,171,.2);
+    }
+    .new-chat-btn:hover { background: #11578f; transform: translateY(-1px); }
+    .session-list { flex: 1; overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 6px; }
+    .session-item {
+      padding: 12px 32px 12px 12px; border-radius: 8px; cursor: pointer; font-size: 0.95rem;
+      color: #2f4f5f; text-overflow: ellipsis; white-space: nowrap; overflow: hidden;
+      border: 1px solid transparent; transition: all 0.2s; position: relative; font-weight: 500;
+    }
+    .session-item:hover { background: #edf7fc; }
+    .session-item.active { background: #d6eff5; border-color: #c6e6ef; color: #176488; }
+    .delete-session {
+      position: absolute; right: 6px; top: 50%; transform: translateY(-50%);
+      color: #ff4d4f; background: none; border: none; cursor: pointer;
+      display: none; padding: 4px; border-radius: 4px; font-size: 1.2rem; line-height: 1;
+    }
+    .delete-session:hover { background: #fff1f0; }
+    .session-item:hover .delete-session { display: block; }
+    .menu-btn {
+      cursor: pointer; background: transparent; border: none; color: #1569ab; display: flex; align-items: center; justify-content: center;
+      width: 36px; height: 36px; border-radius: 50%; padding: 0; transition: 0.2s; margin-right: 4px;
+    }
+    .menu-btn:hover { background: #e8eff3; }
   </style>
 </head>
 <body>
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+  <div class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <button class="new-chat-btn" id="newChatBtn">
+        <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+        新建对话
+      </button>
+    </div>
+    <div class="session-list" id="sessionList"></div>
+  </div>
+
   <div id="loginOverlay" class="login-overlay hidden">
     <!-- 登录面板 -->
     <div class="login-box" id="loginBox">
@@ -285,6 +335,9 @@
   </div>
   <main class="page">
     <header class="header">
+      <button id="menuBtn" class="menu-btn" title="查看历史对话">
+        <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+      </button>
       <h1>
         <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: text-bottom; margin-right: 4px; color: #1569ab;"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
         AI面试助手
@@ -316,9 +369,6 @@
       <button id="sendBtn">发送</button>
       <div class="bottom-row">
         <span class="status" id="statusLabel">空闲</span>
-        <div class="controls">
-          <button class="bottom-btn" id="clearBtn">清空对话</button>
-        </div>
       </div>
     </section>
   </main>
@@ -332,7 +382,6 @@
     const rateVal = document.getElementById("rateVal");
     const muteBtn = document.getElementById("muteBtn");
     const micBtn = document.getElementById("micBtn");
-    const clearBtn = document.getElementById("clearBtn");
     const voiceOverlay = document.getElementById("voiceOverlay");
     const voiceStatus = document.getElementById("voiceStatus");
     const voiceAvatar = document.getElementById("voiceAvatar");
@@ -367,22 +416,34 @@
       {keys: ["英语口语","English","英语"], lang:"en", note:"英语口语练习"},
     ];
 
-    function appendMessage(text, who="ai", saveHistory=true) {
+    function appendMessageToUI(text, who="ai") {
       const wrapper = document.createElement("div");
       wrapper.className = "message " + who;
       const bubble = document.createElement("div");
       bubble.className = "bubble " + who;
-      bubble.textContent = text;
+      
+      let htmlContent = text.replace(/\n/g, '<br/>');
+      htmlContent = htmlContent.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+      bubble.innerHTML = htmlContent;
+      
       wrapper.appendChild(bubble);
       chatArea.appendChild(wrapper);
       chatArea.scrollTop = chatArea.scrollHeight;
+    }
 
-      if (saveHistory && currentUsername) {
-        // 不保存加载中的状态气泡
-        if (text !== "正在生成回答…") {
-          let history = JSON.parse(localStorage.getItem('ai_chat_history_' + currentUsername) || '[]');
-          history.push({role: who, content: text});
-          localStorage.setItem('ai_chat_history_' + currentUsername, JSON.stringify(history));
+    function appendMessage(text, who="ai", saveHistory=true) {
+      appendMessageToUI(text, who);
+
+      if (saveHistory && currentUsername && text !== "正在生成回答…") {
+        const session = sessions.find(s => s.id == activeSessionId);
+        if(session) {
+          session.messages.push({role: who, content: text});
+          // 如果是用户的第一条消息，自动将标题变更为该消息前15字
+          if(session.messages.length === 1 && who === 'user') {
+            session.title = text.length > 15 ? text.substring(0, 15) + "..." : text;
+            renderSidebar();
+          }
+          saveSessions();
         }
       }
     }
@@ -537,14 +598,6 @@
     });
     speechRate.addEventListener("input", ()=> { rateVal.textContent = speechRate.value; });
 
-    clearBtn.addEventListener("click", ()=>{
-      chatArea.innerHTML = '<div class="small-footer">已清空。继续输入新的问题。</div>';
-      setStatus("空闲");
-      if (currentUsername) {
-        localStorage.removeItem('ai_chat_history_' + currentUsername);
-      }
-    });
-
     if ("SpeechRecognition" in window || "webkitSpeechRecognition" in window) {
       const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
       recognition = new SpeechRec();
@@ -593,7 +646,7 @@
 
     window.addEventListener("beforeunload", ()=>{ if(window.speechSynthesis) window.speechSynthesis.cancel();});
 
-    // ========== 登录注册与历史记忆逻辑 ==========
+    // ========== 登录注册与多会话历史记忆逻辑 ==========
     const loginOverlay = document.getElementById("loginOverlay");
     const loginBox = document.getElementById("loginBox");
     const registerBox = document.getElementById("registerBox");
@@ -608,26 +661,110 @@
     const registerBtnUI = document.getElementById("registerBtn");
     const userDisplay = document.getElementById("userDisplay");
     const logoutBtn = document.getElementById("logoutBtn");
+    
+    // Sidebar elements
+    const sidebar = document.getElementById("sidebar");
+    const sidebarOverlay = document.getElementById("sidebarOverlay");
+    const menuBtn = document.getElementById("menuBtn");
+    const newChatBtn = document.getElementById("newChatBtn");
+    const sessionList = document.getElementById("sessionList");
 
     let currentUsername = localStorage.getItem('ai_current_user') || "";
+    let sessions = [];
+    let activeSessionId = null;
 
-    function loadHistory() {
-      chatArea.innerHTML = '<div class="small-footer">欢迎使用，输入你的面试方向或具体问题，AI会自动识别场景。回车发送。</div>';
-      let history = JSON.parse(localStorage.getItem('ai_chat_history_' + currentUsername) || '[]');
-      history.forEach(item => {
-        // false 代表只显示不重复存数据库
-        appendMessage(item.content, item.role, false);
+    menuBtn.onclick = () => { sidebar.classList.add("open"); sidebarOverlay.classList.add("open"); };
+    sidebarOverlay.onclick = () => { sidebar.classList.remove("open"); sidebarOverlay.classList.remove("open"); };
+
+    function initSessions() {
+      if(!currentUsername) return;
+      sessions = JSON.parse(localStorage.getItem('ai_sessions_' + currentUsername) || '[]');
+      
+      // 旧数据迁移
+      let oldHistory = JSON.parse(localStorage.getItem('ai_chat_history_' + currentUsername));
+      if(oldHistory && oldHistory.length > 0) {
+         sessions.push({id: Date.now(), title: "历史对话", messages: oldHistory});
+         localStorage.removeItem('ai_chat_history_' + currentUsername);
+      }
+
+      if(sessions.length === 0) {
+         createNewSession(false);
+      } else {
+         activeSessionId = localStorage.getItem('ai_active_session_' + currentUsername) || sessions[0].id;
+         if(!sessions.find(s=>s.id == activeSessionId)) activeSessionId = sessions[0].id;
+         saveSessions(); // 触发侧边栏渲染
+         loadActiveSession();
+      }
+    }
+
+    function saveSessions() {
+       if(!currentUsername) return;
+       localStorage.setItem('ai_sessions_' + currentUsername, JSON.stringify(sessions));
+       localStorage.setItem('ai_active_session_' + currentUsername, activeSessionId);
+       renderSidebar();
+    }
+
+    function createNewSession(autoClose = true) {
+       const newSession = { id: Date.now(), title: "新对话", messages: [] };
+       sessions.unshift(newSession);
+       activeSessionId = newSession.id;
+       saveSessions();
+       loadActiveSession();
+       if(autoClose && sidebarOverlay.classList.contains("open")) sidebarOverlay.onclick();
+    }
+    
+    newChatBtn.onclick = () => createNewSession();
+
+    function renderSidebar() {
+      sessionList.innerHTML = "";
+      sessions.forEach(s => {
+        const div = document.createElement("div");
+        div.className = "session-item" + (s.id == activeSessionId ? " active" : "");
+        div.textContent = s.title;
+        div.onclick = () => {
+          activeSessionId = s.id;
+          saveSessions();
+          loadActiveSession();
+          sidebarOverlay.onclick();
+        };
+        const delBtn = document.createElement("button");
+        delBtn.className = "delete-session";
+        delBtn.innerHTML = "×";
+        delBtn.title = "删除对话";
+        delBtn.onclick = (e) => {
+          e.stopPropagation();
+          sessions = sessions.filter(x => x.id !== s.id);
+          if(sessions.length === 0) createNewSession(false);
+          else if(activeSessionId == s.id) {
+            activeSessionId = sessions[0].id;
+            loadActiveSession();
+          }
+          saveSessions();
+        };
+        div.appendChild(delBtn);
+        sessionList.appendChild(div);
       });
+    }
+
+    function loadActiveSession() {
+       chatArea.innerHTML = '<div class="small-footer">欢迎使用，输入你的面试方向或具体问题，AI会自动识别场景。回车发送。</div>';
+       const session = sessions.find(s => s.id == activeSessionId);
+       if(session && session.messages) {
+         session.messages.forEach(m => appendMessageToUI(m.content, m.role));
+       }
     }
 
     function checkLoginState() {
       if (currentUsername) {
         loginOverlay.classList.add("hidden");
         userDisplay.textContent = `你好, ${currentUsername}`;
-        loadHistory();
+        initSessions();
       } else {
         loginOverlay.classList.remove("hidden");
         userDisplay.textContent = "";
+        sessions = [];
+        sessionList.innerHTML = "";
+        chatArea.innerHTML = '<div class="small-footer">请先登录开始对话。</div>';
       }
     }
 
