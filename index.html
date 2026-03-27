@@ -232,21 +232,27 @@
     }
     .voice-overlay.hidden { display: none; opacity: 0; pointer-events: none; }
     .voice-avatar {
-      width: 120px; height: 120px;
+      width: 150px; height: 150px;
       border-radius: 50%;
-      background: linear-gradient(135deg, #c7e7f4, #82b9d5);
+      background: #ffffff;
       display: flex; justify-content: center; align-items: center;
       color: #176488; font-size: 2.5rem; font-weight: bold;
       border: 4px solid #fff;
-      box-shadow: 0 10px 30px rgba(23,100,136,.2);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
       margin-bottom: 30px;
+      overflow: hidden;
+    }
+    .voice-avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
     }
     .pulse-anim { animation: pulse 2s infinite; }
     .pulse-fast { animation: pulse 1s infinite; }
     @keyframes pulse {
-      0% { box-shadow: 0 0 0 0 rgba(130,185,213,0.6); }
-      70% { box-shadow: 0 0 0 30px rgba(130,185,213,0); }
-      100% { box-shadow: 0 0 0 0 rgba(130,185,213,0); }
+      0% { box-shadow: 0 0 0 0 rgba(0,0,0,0.1); }
+      70% { box-shadow: 0 0 0 30px rgba(0,0,0,0); }
+      100% { box-shadow: 0 0 0 0 rgba(0,0,0,0); }
     }
     .voice-status { font-size: 1.2rem; color: #165e86; margin-bottom: 50px; font-weight: 500; }
     .voice-rate-control {
@@ -376,7 +382,8 @@
     }
     .menu-btn:hover { background: #e8eff3; }
       .avatar-grid { display: flex; gap: 10px; justify-content: center; margin-bottom: 20px; flex-wrap: wrap; }
-    .avatar-opt { width: 44px; height: 44px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; transition: 0.2s; font-size: 26px; line-height: 40px; background: #fff; box-shadow: 0 2px 5px rgba(0,0,0,0.1); display: flex; align-items: center; justify-content: center; user-select: none; }
+    .avatar-opt { width: 44px; height: 44px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; transition: 0.2s; background: #fff; box-shadow: 0 2px 5px rgba(0,0,0,0.1); display: flex; align-items: center; justify-content: center; user-select: none; overflow: hidden; }
+    .avatar-opt img { width: 100%; height: 100%; object-fit: cover; }
     .avatar-opt.selected { border-color: #1569ab; transform: scale(1.15); box-shadow: 0 4px 10px rgba(21,105,171,.3); }
     .user-avatar-disp { font-size: 1.2rem; margin-right: 4px; vertical-align: middle; }
   </style>
@@ -406,12 +413,11 @@
     <div class="login-box hidden" id="registerBox">
       <h2>注册 新账号</h2>
       <div class="avatar-grid" id="regAvatarGrid">
-        <div class="avatar-opt selected" data-avatar="🐶">🐶</div>
-        <div class="avatar-opt" data-avatar="🐕">🐕</div>
-        <div class="avatar-opt" data-avatar="🦮">🦮</div>
-        <div class="avatar-opt" data-avatar="🐩">🐩</div>
-        <div class="avatar-opt" data-avatar="🐾">🐾</div>
-        <div class="avatar-opt" data-avatar="🐺">🐺</div>
+        <div class="avatar-opt selected" data-avatar="avatars/21A35E72DE6FBE82A71682285B121BDC.png"><img src="avatars/21A35E72DE6FBE82A71682285B121BDC.png" alt="dog1"></div>
+        <div class="avatar-opt" data-avatar="avatars/3E16E282FEDF6A40633FA8B8FFE6F0DF.png"><img src="avatars/3E16E282FEDF6A40633FA8B8FFE6F0DF.png" alt="dog2"></div>
+        <div class="avatar-opt" data-avatar="avatars/64CF685321AB2EE1FDAD019DC0E78DEA.png"><img src="avatars/64CF685321AB2EE1FDAD019DC0E78DEA.png" alt="dog3"></div>
+        <div class="avatar-opt" data-avatar="avatars/6E8B9214F6D1C887397008D6C43D9305.png"><img src="avatars/6E8B9214F6D1C887397008D6C43D9305.png" alt="dog4"></div>
+        <div class="avatar-opt" data-avatar="avatars/D827DFB784CEAE35790B79BEBBE5F17D.png"><img src="avatars/D827DFB784CEAE35790B79BEBBE5F17D.png" alt="dog5"></div>
       </div>
       <input type="text" id="regUsername" placeholder="设置新用户名" />
       <input type="password" id="regPassword" placeholder="设置密码 (最少4位)" />
@@ -844,8 +850,8 @@
         isVoiceMode = true;
         voiceOverlay.classList.remove("hidden");
         let userAvatars = JSON.parse(localStorage.getItem('ai_users_avatar') || '{}');
-        let avatar = userAvatars[currentUsername] || "🐶";
-        voiceAvatar.textContent = avatar;
+        let avatar = userAvatars[currentUsername] || "avatars/21A35E72DE6FBE82A71682285B121BDC.png";
+        voiceAvatar.innerHTML = '<img src="' + avatar + '" alt="avatar">';
         startRec();
       });
       endCallBtn.addEventListener("click", () => {
@@ -877,7 +883,7 @@
     const registerBtnUI = document.getElementById("registerBtn");
     const userDisplay = document.getElementById("userDisplay");
     
-    let selectedAvatar = "🐶";
+    let selectedAvatar = "avatars/21A35E72DE6FBE82A71682285B121BDC.png";
     document.querySelectorAll("#regAvatarGrid .avatar-opt").forEach(opt => {
       opt.addEventListener("click", () => {
         document.querySelectorAll("#regAvatarGrid .avatar-opt").forEach(o => o.classList.remove("selected"));
@@ -984,8 +990,8 @@
       if (currentUsername) {
         loginOverlay.classList.add("hidden");
         let userAvatars = JSON.parse(localStorage.getItem('ai_users_avatar') || '{}');
-        let avatar = userAvatars[currentUsername] || "🐶";
-        userDisplay.innerHTML = `<span class="user-avatar-disp">` + avatar + `</span>` + currentUsername;
+        let avatar = userAvatars[currentUsername] || "avatars/21A35E72DE6FBE82A71682285B121BDC.png";
+        userDisplay.innerHTML = `<img src="` + avatar + `" class="user-avatar-disp" style="width:24px;height:24px;border-radius:50%;object-fit:cover;">` + currentUsername;
         initSessions();
       } else {
         loginOverlay.classList.remove("hidden");
