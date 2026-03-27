@@ -695,9 +695,9 @@
       }
     }
 
-    async function queryChatGpt(question){
+async function queryChatGpt(question, onChunk){
       setStatus("AI 正在思考...");
-      
+
       let finalPrompt = getAIMessagePrompt(question);
       let isMultimodal = false;
 
@@ -714,7 +714,7 @@
         "Content-Type": "application/json",
         "Authorization": "Bearer " + API_KEY
       };
-      
+
       let userMessageContent = finalPrompt;
       if (isMultimodal) {
         userMessageContent = [
@@ -727,6 +727,7 @@
         model: isMultimodal ? "qwen-vl-plus" : "qwen-plus", // Changed to qwen-plus for Qwen 3.5 Plus capabilities under DashScope
         temperature: 0.8,
         top_p: 0.95,
+        stream: true,
         messages: [
           {role:"system", content:"你是一个友好、专业的AI面试助手，可以根据用户资料/图片进行针对性提问。"},
           {role:"user", content: userMessageContent }
@@ -743,14 +744,27 @@
           const errText = await resp.text();
           throw new Error(`HTTP ${resp.status} ${resp.statusText} // ${errText}`);
         }
-        const data = await resp.json();
+        
         let content = "";
-        if (data?.choices && data.choices[0]?.message?.content) {
-          content = data.choices[0].message.content.trim();
-        } else if (data?.data?.[0]?.content) {
-          content = data.data[0].content.trim();
-        } else if (data?.result?.[0]?.content) {
-          content = data.result[0].content.trim();
+        const reader = resp.body.getReader();
+        const decoder = new TextDecoder("utf-8");
+        while (true) {
+          const {done, value} = await reader.read();
+          if (done) break;
+          const chunk = decoder.decode(value, {stream: true});
+          const lines = chunk.split("\n");
+          for (let line of lines) {
+            line = line.trim();
+            if (line.startsWith("data: ") && line !== "data: [DONE]") {
+              try {
+                const data = JSON.parse(line.slice(6));
+                if (data.choices && data.choices[0].delta && data.choices[0].delta.content) {
+                  content += data.choices[0].delta.content;
+                  if(onChunk) onChunk(content);
+                }
+              } catch(e) {}
+            }
+          }
         }
         if (!content) content = "[AI 未返回内容，请检查 API 设置]";
         return content;
@@ -814,12 +828,42 @@
       const loadingHTML = `<div class="typing-dots"><div class="typing-dot">▷</div><div class="typing-dot">▷</div><div class="typing-dot">▷</div></div>`;
       appendMessage(loadingHTML,"ai");
       try{
-        const aiReply = await queryChatGpt(text);
-        const lastMsg = Array.from(chatArea.querySelectorAll(".message.ai")).pop();
-        if(lastMsg && lastMsg.innerHTML.includes("typing-dots")) {
-          lastMsg.remove();
+        let aiMessageBubble = null;
+        let aiReply = await queryChatGpt(text, (currentText) => {
+          if (!aiMessageBubble) {
+            const lastMsg = Array.from(chatArea.querySelectorAll(".message.ai")).pop();
+            if(lastMsg && lastMsg.innerHTML.includes("typing-dots")) {
+              lastMsg.remove();
+            }
+            const wrapper = document.createElement("div");
+            wrapper.className = "message ai";
+            aiMessageBubble = document.createElement("div");
+            aiMessageBubble.className = "bubble ai";
+            wrapper.appendChild(aiMessageBubble);
+            chatArea.appendChild(wrapper);
+          }
+          let htmlContent = currentText.replace(/\n/g, '<br/>');
+          htmlContent = htmlContent.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+          aiMessageBubble.innerHTML = htmlContent;
+          chatArea.scrollTop = chatArea.scrollHeight;
+        });
+
+        if (!aiMessageBubble) {
+          const lastMsg = Array.from(chatArea.querySelectorAll(".message.ai")).pop();
+          if(lastMsg && lastMsg.innerHTML.includes("typing-dots")) {
+            lastMsg.remove();
+          }
+          appendMessage(aiReply, "ai", false);
         }
-        appendMessage(aiReply,"ai");
+
+        if (currentUsername) {
+          const session = sessions.find(s => s.id == activeSessionId);
+          if(session) {
+            session.messages.push({role: "ai", content: aiReply});
+            saveSessions();
+          }
+        }
+
         speakText(aiReply, aiLang);
 
         if (pendingFileBlob) {
