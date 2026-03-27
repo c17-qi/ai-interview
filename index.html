@@ -225,8 +225,15 @@
     .btn-login:hover { background: #11578f; transform: translateY(-1px); }
     .btn-reg { background: #e8eff3; color: #1569ab; }
     .btn-reg:hover { background: #dce7ee; }
-    .header-right { margin-left: auto; display: flex; align-items: center; gap: 12px; }
-    .user-tag { font-size: 0.9rem; color: #1569ab; font-weight: 600; background: #ebf6ff; padding: 4px 12px; border-radius: 20px; }
+    .header-right { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+    .icon-btn {
+      background: transparent; border: none; color: #5a7185; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      width: 36px; height: 36px; border-radius: 50%; transition: all 0.2s;
+    }
+    .icon-btn:hover { background: #e8eff3; color: #1569ab; }
+    .icon-btn svg { width: 20px; height: 20px; }
+    .user-tag { font-size: 0.9rem; color: #1569ab; font-weight: 600; background: #ebf6ff; padding: 4px 12px; border-radius: 20px; margin-left: 4px; }
     .logout-btn { 
       background: transparent; color: #d32f2f; border: 1px solid #ffccc7; 
       padding: 5px 12px; border-radius: 20px; cursor: pointer; font-size: 0.8rem; font-weight: bold; transition: 0.2s;
@@ -264,6 +271,12 @@
       <h1>AI面试助手</h1>
       <span class="tag">面试+模拟问答</span>
       <div class="header-right">
+        <button class="icon-btn" id="muteBtn" title="静音 (关闭语音播报)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
+        </button>
+        <button class="icon-btn" id="micBtn" title="开启语音通话">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+        </button>
         <span class="user-tag" id="userDisplay"></span>
         <button class="logout-btn" id="logoutBtn">退出登录</button>
       </div>
@@ -277,10 +290,8 @@
       <div class="bottom-row">
         <span class="status" id="statusLabel">空闲</span>
         <div class="controls">
-          <label>语音<input type="checkbox" id="speechToggle" checked></label>
           <label>语速 <span id="rateVal">1.0</span><input id="speechRate" type="range" min="0.7" max="2" step="0.1" value="1"></label>
-          <button class="bottom-btn" id="micBtn">🎤 开启语音通话</button>
-          <button class="bottom-btn" id="clearBtn">清空</button>
+          <button class="bottom-btn" id="clearBtn">清空对话</button>
         </div>
       </div>
     </section>
@@ -291,9 +302,9 @@
     const input = document.getElementById("userInput");
     const sendBtn = document.getElementById("sendBtn");
     const statusLabel = document.getElementById("statusLabel");
-    const speechToggle = document.getElementById("speechToggle");
     const speechRate = document.getElementById("speechRate");
     const rateVal = document.getElementById("rateVal");
+    const muteBtn = document.getElementById("muteBtn");
     const micBtn = document.getElementById("micBtn");
     const clearBtn = document.getElementById("clearBtn");
     const voiceOverlay = document.getElementById("voiceOverlay");
@@ -304,6 +315,19 @@
     let recognition;
     let isLoading = false;
     let isVoiceMode = false;
+    let isSoundOn = true;
+
+    muteBtn.onclick = () => {
+      isSoundOn = !isSoundOn;
+      if (isSoundOn) {
+        muteBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>`;
+        muteBtn.title = "静音 (关闭语音播报)";
+      } else {
+        muteBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><line x1="23" y1="1" x2="1" y2="23"></line></svg>`;
+        muteBtn.title = "开启语音播报";
+        if(window.speechSynthesis) window.speechSynthesis.cancel();
+      }
+    };
 
     function setVoiceStatus(text) { voiceStatus.textContent = text; }
 
@@ -417,7 +441,7 @@
     }
 
     function speakText(text, voiceLang="zh-CN"){
-      if(!speechToggle.checked || !window.speechSynthesis) {
+      if(!isSoundOn || !window.speechSynthesis) {
         if(isVoiceMode) setTimeout(()=>{ startRec(); }, 500);
         return;
       }
