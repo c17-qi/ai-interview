@@ -532,9 +532,7 @@
     document.querySelectorAll(".prompt-chip").forEach(chip => {
       chip.addEventListener("click", () => {
         input.value = chip.textContent.replace(/[^\u4e00-\u9fa5a-zA-Z0-9]/g, '').trim();
-        input.focus();
-        // 如果想点击直接发送，可以去掉下方注释：
-        // doSend();
+        doSend();
       });
     });
     speechRate.addEventListener("input", ()=> { rateVal.textContent = speechRate.value; });
