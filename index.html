@@ -442,7 +442,15 @@
       <span class="prompt-chip">🎓 考研复试面试</span>
     </div>
     <section class="input-wrapper">
+      <div class="file-preview-area" id="filePreviewArea" style="display:none; padding: 4px; border: 1px solid #cae2eb; border-radius: 8px; margin-bottom: 8px; background: #fff; align-items: center; gap: 8px;">
+        <span id="fileNameDisplay" style="font-size: 0.85rem; color: #1569ab; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"></span>
+        <button id="clearFileBtn" style="background:none; border:none; color:#d32f2f; cursor:pointer;">&times;</button>
+      </div>
       <div class="input-actions-bar">
+        <label for="fileUpload" class="icon-btn" title="上传文件/照片 (图片或txt/md)" style="width: auto; height: auto; margin:0;">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg>
+        </label>
+        <input type="file" id="fileUpload" style="display: none" accept="image/*,text/plain,.txt,.md,.xml,.csv,.json">
         <button class="icon-btn" id="muteBtn" title="静音 (关闭语音播报)" style="width: auto; height: auto;">
           <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
         </button>
@@ -470,6 +478,10 @@
     const input = document.getElementById("userInput");
     const sendBtn = document.getElementById("sendBtn");
     const sttBtn = document.getElementById("sttBtn");
+    const fileUpload = document.getElementById("fileUpload");
+    const filePreviewArea = document.getElementById("filePreviewArea");
+    const fileNameDisplay = document.getElementById("fileNameDisplay");
+    const clearFileBtn = document.getElementById("clearFileBtn");
     const statusLabel = document.getElementById("statusLabel");
     const speechRate = document.getElementById("speechRate");
     const rateVal = document.getElementById("rateVal");
@@ -525,6 +537,35 @@
     let isLoading = false;
     let isVoiceMode = false;
     let isSoundOn = true;
+
+    // File Upload State
+    let pendingFileBlob = null;
+    let pendingFileType = null; // 'text' | 'image'
+    
+    fileUpload.addEventListener("change", (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const isImg = file.type.startsWith("image/");
+      pendingFileType = isImg ? "image" : "text";
+      const reader = new FileReader();
+      reader.onload = (evt) => {
+        pendingFileBlob = evt.target.result;
+        fileNameDisplay.textContent = isImg ? "已选图片: " + file.name : "已选文档: " + file.name;
+        filePreviewArea.style.display = "flex";
+      };
+      if (isImg) {
+        reader.readAsDataURL(file);
+      } else {
+        reader.readAsText(file);
+      }
+      fileUpload.value = "";
+    });
+
+    clearFileBtn.addEventListener("click", () => {
+      pendingFileBlob = null;
+      pendingFileType = null;
+      filePreviewArea.style.display = "none";
+    });
 
     muteBtn.onclick = () => {
       isSoundOn = !isSoundOn;
@@ -610,25 +651,39 @@
 
     async function queryChatGpt(question){
       setStatus("AI 正在思考...");
-      const prompt = getAIMessagePrompt(question);
+      
+      let finalPrompt = getAIMessagePrompt(question);
+      let isMultimodal = false;
 
-      // 这里写上你的 API Key / API Host
+      // 如果有挂载文本，合并到 Prompt 中
+      if (pendingFileType === "text" && pendingFileBlob) {
+        finalPrompt = "【用户上传了背景参考资料】\n" + pendingFileBlob.substring(0, 3000) + "\n\n【用户问题】\n" + finalPrompt;
+      } else if (pendingFileType === "image" && pendingFileBlob) {
+        isMultimodal = true;
+      }
+
       const API_KEY = "sk-e2ac4dc6fedf4385a0f5aaf61ed4657f";
-      // 使用阿里云百炼（DashScope）的 OpenAI 兼容接口，因为我们下面用的就是 OpenAI 格式的请求体
       const API_HOST = "https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions";
-      // 仅示例：请根据最新通义千问接口地址调整
       const headers = {
         "Content-Type": "application/json",
         "Authorization": "Bearer " + API_KEY
       };
+      
+      let userMessageContent = finalPrompt;
+      if (isMultimodal) {
+        userMessageContent = [
+          { type: "text", text: finalPrompt },
+          { type: "image_url", image_url: { url: pendingFileBlob } }
+        ];
+      }
+
       const body = {
-        model: "qwen-turbo",
-        temperature: 0.9,
+        model: isMultimodal ? "qwen-vl-plus" : "qwen-turbo",
+        temperature: 0.8,
         top_p: 0.95,
-        max_tokens: 1200,
         messages: [
-          {role:"system", content:"你是一个友好、专业的AI面试助手。"},
-          {role:"user", content: prompt }
+          {role:"system", content:"你是一个友好、专业的AI面试助手，可以根据用户资料/图片进行针对性提问。"},
+          {role:"user", content: userMessageContent }
         ]
       };
 
@@ -693,8 +748,14 @@
     async function doSend(evtOrOverrideText){
       if(isLoading) return;
       const text = typeof evtOrOverrideText === 'string' ? evtOrOverrideText.trim() : input.value.trim();
-      if(!text) return;
-      appendMessage(text,"user");
+      if(!text && !pendingFileBlob) return;
+      
+      let displayText = text;
+      if (pendingFileBlob) {
+         displayText = `[已附加${pendingFileType==="image"?"图片":"文件"}] ` + text;
+      }
+      appendMessage(displayText,"user");
+      
       if(typeof evtOrOverrideText !== 'string') input.value = "";
       const scenario = detectScenario(text);
       const aiLang = scenario.lang === "en" ? "en-US" : "zh-CN";
@@ -713,6 +774,12 @@
         }
         appendMessage(aiReply,"ai");
         speakText(aiReply, aiLang);
+
+        if (pendingFileBlob) {
+          pendingFileBlob = null;
+          pendingFileType = null;
+          filePreviewArea.style.display = "none";
+        }
       } catch(e) {
         appendMessage("调用失败：" + e.message,"ai");
       }
