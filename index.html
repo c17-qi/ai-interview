@@ -678,7 +678,7 @@
       }
 
       const body = {
-        model: isMultimodal ? "qwen-vl-plus" : "qwen-turbo",
+        model: isMultimodal ? "qwen-vl-plus" : "qwen-plus", // Changed to qwen-plus for Qwen 3.5 Plus capabilities under DashScope
         temperature: 0.8,
         top_p: 0.95,
         messages: [
