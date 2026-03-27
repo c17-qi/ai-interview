@@ -232,12 +232,12 @@
     }
     .voice-overlay.hidden { display: none; opacity: 0; pointer-events: none; }
     .voice-avatar {
-      width: 220px; height: 220px;
+      width: 200px; height: 200px;
       border-radius: 50%;
       background: #ffffff;
       display: flex; justify-content: center; align-items: center;
       color: #176488; font-size: 2.5rem; font-weight: bold;
-      border: 6px solid #fff;
+      border: 2px solid #fff;
       box-shadow: 0 10px 30px rgba(0,0,0,0.1);
       margin-bottom: 30px;
       overflow: hidden;
@@ -250,6 +250,7 @@
       object-position: center;
       display: block;
       border-radius: 50%;
+      transform: scale(1.4); /* 放大内部狗狗图像，屏蔽掉多余的白色/透明背景 */
     }
     .pulse-anim { animation: pulse 2s infinite; }
     .pulse-fast { animation: pulse 1s infinite; }
@@ -386,8 +387,8 @@
     }
     .menu-btn:hover { background: #e8eff3; }
       .avatar-grid { display: flex; gap: 10px; justify-content: center; margin-bottom: 20px; flex-wrap: wrap; }
-    .avatar-opt { width: 72px; height: 72px; border-radius: 50%; border: 3px solid transparent; cursor: pointer; transition: 0.2s; background: #fff; box-shadow: 0 2px 5px rgba(0,0,0,0.1); display: flex; align-items: center; justify-content: center; user-select: none; overflow: hidden; padding: 0; margin: 0; }
-    .avatar-opt img { width: 100%; height: 100%; object-fit: cover; object-position: center; display: block; border-radius: 50%; }
+    .avatar-opt { width: 75px; height: 75px; border-radius: 50%; border: 3px solid transparent; cursor: pointer; transition: 0.2s; background: #fff; box-shadow: 0 2px 5px rgba(0,0,0,0.1); display: flex; align-items: center; justify-content: center; user-select: none; overflow: hidden; padding: 0; margin: 0; }
+    .avatar-opt img { width: 100%; height: 100%; object-fit: cover; object-position: center; display: block; border-radius: 50%; transform: scale(1.4); }
     .avatar-opt.selected { border-color: #1569ab; transform: scale(1.15); box-shadow: 0 4px 10px rgba(21,105,171,.3); }
     .user-avatar-disp { font-size: 1.2rem; margin-right: 4px; vertical-align: middle; }
   </style>
@@ -995,7 +996,7 @@
         loginOverlay.classList.add("hidden");
         let userAvatars = JSON.parse(localStorage.getItem('ai_users_avatar') || '{}');
         let avatar = userAvatars[currentUsername] || "avatars/21A35E72DE6FBE82A71682285B121BDC.png";
-        userDisplay.innerHTML = `<img src="` + avatar + `" class="user-avatar-disp" style="width:24px;height:24px;border-radius:50%;object-fit:cover;">` + currentUsername;
+        userDisplay.innerHTML = `<img src="` + avatar + `" class="user-avatar-disp" style="width:24px;height:24px;border-radius:50%;object-fit:cover;transform:scale(1.4);">` + currentUsername;
         initSessions();
       } else {
         loginOverlay.classList.remove("hidden");
