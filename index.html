@@ -236,12 +236,21 @@
 </head>
 <body>
   <div id="loginOverlay" class="login-overlay hidden">
-    <div class="login-box">
+    <!-- 登录面板 -->
+    <div class="login-box" id="loginBox">
       <h2>登录 面试助手</h2>
       <input type="text" id="loginUsername" placeholder="请输入用户名" />
-      <input type="password" id="loginPassword" placeholder="请输入密码 (最少4位)" />
+      <input type="password" id="loginPassword" placeholder="请输入密码" />
       <button class="btn-login" id="loginBtn">登 录</button>
-      <button class="btn-reg" id="registerBtn">注 册 新 账 号</button>
+      <button class="btn-reg" id="gotoRegisterBtn">没 有 账 号 ？ 去 注 册</button>
+    </div>
+    <!-- 注册面板 -->
+    <div class="login-box hidden" id="registerBox">
+      <h2>注册 新账号</h2>
+      <input type="text" id="regUsername" placeholder="设置新用户名" />
+      <input type="password" id="regPassword" placeholder="设置密码 (最少4位)" />
+      <button class="btn-login" id="registerBtn">确 认 注 册</button>
+      <button class="btn-reg" id="gotoLoginBtn">已 有 账 号 ？ 去 登 录</button>
     </div>
   </div>
   <div id="voiceOverlay" class="voice-overlay hidden">
@@ -528,8 +537,15 @@
 
     // ========== 登录注册与历史记忆逻辑 ==========
     const loginOverlay = document.getElementById("loginOverlay");
+    const loginBox = document.getElementById("loginBox");
+    const registerBox = document.getElementById("registerBox");
+    const gotoRegisterBtn = document.getElementById("gotoRegisterBtn");
+    const gotoLoginBtn = document.getElementById("gotoLoginBtn");
+
     const loginUsername = document.getElementById("loginUsername");
     const loginPassword = document.getElementById("loginPassword");
+    const regUsername = document.getElementById("regUsername");
+    const regPassword = document.getElementById("regPassword");
     const loginBtnUI = document.getElementById("loginBtn");
     const registerBtnUI = document.getElementById("registerBtn");
     const userDisplay = document.getElementById("userDisplay");
@@ -557,6 +573,16 @@
       }
     }
 
+    gotoRegisterBtn.onclick = () => {
+      loginBox.classList.add("hidden");
+      registerBox.classList.remove("hidden");
+    };
+
+    gotoLoginBtn.onclick = () => {
+      registerBox.classList.add("hidden");
+      loginBox.classList.remove("hidden");
+    };
+
     loginBtnUI.onclick = () => {
       const u = loginUsername.value.trim();
       const p = loginPassword.value.trim();
@@ -573,8 +599,8 @@
     };
 
     registerBtnUI.onclick = () => {
-      const u = loginUsername.value.trim();
-      const p = loginPassword.value.trim();
+      const u = regUsername.value.trim();
+      const p = regPassword.value.trim();
       if(!u || p.length < 4) return alert("请输入用户名和至少4位密码！");
       const users = JSON.parse(localStorage.getItem('ai_users_db') || '{}');
       if(users[u]) return alert("该用户名已被注册，请直接登录！");
@@ -586,7 +612,11 @@
       
       currentUsername = u;
       localStorage.setItem('ai_current_user', u);
-      loginUsername.value = ""; loginPassword.value = "";
+      regUsername.value = ""; regPassword.value = "";
+      // 自动切回登录面板，以免下次退出登录时显示注册
+      registerBox.classList.add("hidden");
+      loginBox.classList.remove("hidden");
+      
       checkLoginState();
     };
 
