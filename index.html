@@ -39,17 +39,12 @@
     }
     .header h1 {
       margin: 0;
-      font-size: 1.3rem;
-      color: #0c4a73;
-      font-weight: 600;
+      font-size: 18px;
+      color: #333;
+      font-weight: bold;
     }
     .header .tag {
-      border: 1px solid #c4def6;
-      color: #1569ab;
-      background: #ebf6ff;
-      border-radius: 999px;
-      padding: 2px 10px;
-      font-size: 0.75rem;
+      display: none;
     }
     .chat-area {
       flex: 1;
@@ -92,16 +87,28 @@
       margin-top:4px;display:block;
     }
     .quick-prompts {
-      display: flex; gap: 8px; overflow-x: auto; padding: 12px 16px 10px; background: #f9feff;
-      scrollbar-width: none; flex-shrink: 0; border-top: 1px solid #e6edf1;
+      display: flex; gap: 10px; overflow-x: auto; padding: 0 20px 20px; background: transparent;
+      scrollbar-width: none; flex-shrink: 0; border-top: none;
     }
     .quick-prompts::-webkit-scrollbar { display: none; }
     .prompt-chip {
-      white-space: nowrap; font-size: 0.85rem; color: #1569ab; background: #e8eff3;
-      padding: 6px 12px; border-radius: 16px; cursor: pointer; transition: 0.2s;
-      border: 1px solid transparent; flex-shrink: 0;
+      white-space: nowrap; font-size: 16px; color: #333; background: #F5F5F5;
+      padding: 8px 16px; border-radius: 8px; cursor: pointer; transition: 0.2s;
+      border: none; flex-shrink: 0; display: flex; align-items: center; justify-content: center;
     }
-    .prompt-chip:hover { background: #d0e4ef; border-color: #b0d0e3; transform: translateY(-1px); }
+    .prompt-chip:hover { background: #E6F7FF; transform: translateY(-1px); }
+    .prompt-chip.active { background: #E6F7FF; font-weight: bold; color: #1569ab; }
+    .rate-group { display: flex; gap: 4px; background: transparent; padding: 4px; border-radius: 8px; margin-right: 8px; }
+    .rate-btn { background: transparent; border: none; font-size: 0.85rem; padding: 4px 10px; border-radius: 6px; cursor: pointer; color: #5a7185; transition: 0.2s; }
+    .rate-btn:hover { background: #f0f4f8; }
+    .rate-btn.active { background: #E6F7FF; color: #1569ab; font-weight: bold; }
+    .nav-text-btn { background: transparent; border: none; color: #333; font-size: 15px; font-weight: bold; cursor: pointer; padding: 6px 12px; border-radius: 8px; transition: 0.2s; white-space: nowrap; }
+    .nav-text-btn:hover { background: #E6F7FF; color: #1569ab; }
+    .typing-dots { display: inline-flex; gap: 4px; align-items: center; color: #999; font-size: 16px; margin: 4px 8px; }
+    .typing-dot { animation: typing 1.4s infinite ease-in-out both; }
+    .typing-dot:nth-child(1) { animation-delay: -0.32s; }
+    .typing-dot:nth-child(2) { animation-delay: -0.16s; }
+    @keyframes typing { 0%, 80%, 100% { opacity: 0.3; transform: scale(0.8); } 40% { opacity: 1; transform: scale(1.2); } }
 
     .input-wrapper {
       padding: 6px 16px 16px;
@@ -260,11 +267,6 @@
       100% { box-shadow: 0 4px 15px rgba(0,0,0,0.1), 0 0 0 0 rgba(0,0,0,0); }
     }
     .voice-status { font-size: 1.2rem; color: #165e86; margin-bottom: 50px; font-weight: 500; }
-    .voice-rate-control {
-      margin-top: 30px; display: flex; flex-direction: column; align-items: center; gap: 8px;
-      color: #5a7185; font-size: 0.9rem;
-    }
-    .voice-rate-control input[type=range] { width: 120px; accent-color: #1569ab; }
     .end-call-btn {
       background: #ff4d4f; color: #fff; border: none;
       padding: 12px 30px; border-radius: 30px; font-size: 1.1rem;
@@ -444,29 +446,33 @@
     <div class="voice-avatar pulse-anim" id="voiceAvatar">AI</div>
     <div class="voice-status" id="voiceStatus">正在连接...</div>
     <button class="end-call-btn" id="endCallBtn">结束通话</button>
-    <div class="voice-rate-control">
-      <label>语速调整: <span id="rateVal">1.0</span>x</label>
-      <input id="speechRate" type="range" min="0.7" max="2.0" step="0.1" value="1.0">
-    </div>
   </div>
   <main class="page">
     <header class="header">
       <button id="menuBtn" class="menu-btn" title="查看历史对话">
         <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
       </button>
-      <h1>
-        <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: text-bottom; margin-right: 4px; color: #1569ab;"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
-        AI面试助手
-      </h1>
-      <span class="tag">AI 面试模拟</span>
+      <h1>AI面试助手</h1>
       <div class="header-right">
-        <span class="user-tag" id="userDisplay"></span>
-        <button class="logout-btn" id="logoutBtn">退出登录</button>
+        <div class="rate-group" id="headerRateGroup">
+          <button class="rate-btn" data-rate="0.8">慢</button>
+          <button class="rate-btn active" data-rate="1.0">1.0x</button>
+          <button class="rate-btn" data-rate="1.2">快</button>
+        </div>
+        <div id="unloggedBtns" style="display: none; align-items: center; gap: 4px;">
+          <button class="nav-text-btn" id="navLoginBtn">登录</button>
+          <button class="nav-text-btn" id="navRegBtn">注册</button>
+        </div>
+        <div id="loggedBtns" style="display: none; align-items: center; gap: 4px;">
+          <span class="user-tag" id="userDisplay"></span>
+          <button class="logout-btn" id="logoutBtn">退出登录</button>
+        </div>
       </div>
     </header>
     <section id="chatArea" class="chat-area">
       <div class="small-footer">欢迎使用，输入你的面试方向或具体问题，AI会自动识别场景。回车发送。</div>
     </section>
+    <div id="welcomePrompt" style="text-align: center; font-size: 16px; color: #666; margin: 20px 0 10px;">请先登录开始对话</div>
     <div class="quick-prompts" id="quickPromptsWrapper">
       <span class="prompt-chip">🏦 银行面试模拟</span>
       <span class="prompt-chip">🗣️ 英语口语测试</span>
@@ -500,8 +506,8 @@
         </div>
         <button id="sendBtn">发送</button>
       </div>
-      <div class="bottom-row">
-        <span class="status" id="statusLabel">空闲</span>
+      <div class="bottom-row" style="display: none;">
+        <span class="status" id="statusLabel"></span>
       </div>
     </section>
   </main>
@@ -516,8 +522,15 @@
     const fileNameDisplay = document.getElementById("fileNameDisplay");
     const clearFileBtn = document.getElementById("clearFileBtn");
     const statusLabel = document.getElementById("statusLabel");
-    const speechRate = document.getElementById("speechRate");
-    const rateVal = document.getElementById("rateVal");
+    let currentSpeechRate = 1.0;
+    document.querySelectorAll(".rate-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll(".rate-btn").forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        currentSpeechRate = parseFloat(btn.getAttribute("data-rate"));
+      });
+    });
+
     const muteBtn = document.getElementById("muteBtn");
     const micBtn = document.getElementById("micBtn");
     const voiceOverlay = document.getElementById("voiceOverlay");
@@ -642,7 +655,7 @@
     function appendMessage(text, who="ai", saveHistory=true) {
       appendMessageToUI(text, who);
 
-      if (saveHistory && currentUsername && text !== "正在生成回答…") {
+      if (saveHistory && currentUsername && !text.includes("typing-dots")) {
         const session = sessions.find(s => s.id == activeSessionId);
         if(session) {
           session.messages.push({role: who, content: text});
@@ -756,7 +769,7 @@
       }
       window.speechSynthesis.cancel();
       const u = new SpeechSynthesisUtterance(text);
-      u.rate = Number(speechRate.value) || 1;
+      u.rate = currentSpeechRate;
       u.lang = voiceLang;
       u.onstart = () => {
         if(isVoiceMode) {
@@ -798,11 +811,12 @@
         setVoiceStatus("AI 思考中...");
         voiceAvatar.className = "voice-avatar";
       }
-      appendMessage("正在生成回答…","ai");
+      const loadingHTML = `<div class="typing-dots"><div class="typing-dot">▷</div><div class="typing-dot">▷</div><div class="typing-dot">▷</div></div>`;
+      appendMessage(loadingHTML,"ai");
       try{
         const aiReply = await queryChatGpt(text);
         const lastMsg = Array.from(chatArea.querySelectorAll(".message.ai")).pop();
-        if(lastMsg && lastMsg.textContent.includes("正在生成回答")) {
+        if(lastMsg && lastMsg.innerHTML.includes("typing-dots")) {
           lastMsg.remove();
         }
         appendMessage(aiReply,"ai");
@@ -826,11 +840,9 @@
     // 快捷提示点击事件
     document.querySelectorAll(".prompt-chip").forEach(chip => {
       chip.addEventListener("click", () => {
+        document.querySelectorAll(".prompt-chip").forEach(c => c.classList.remove("active"));
+        chip.classList.add("active");
         input.value = chip.textContent.replace(/[^\u4e00-\u9fa5a-zA-Z0-9]/g, '').trim();
-        doSend();
-      });
-    });
-    speechRate.addEventListener("input", ()=> { rateVal.textContent = speechRate.value; });
 
     if ("SpeechRecognition" in window || "webkitSpeechRecognition" in window) {
       const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -1002,20 +1014,49 @@
     }
 
     function checkLoginState() {
+      const welcomePrompt = document.getElementById("welcomePrompt");
       if (currentUsername) {
+        document.getElementById("unloggedBtns").style.display = "none";
+        document.getElementById("loggedBtns").style.display = "flex";
         loginOverlay.classList.add("hidden");
         let userAvatars = JSON.parse(localStorage.getItem('ai_users_avatar') || '{}');
         let avatar = userAvatars[currentUsername] || "avatars/055041F19C27E3BDF81F0C4E3D9F53D7.png";
         userDisplay.innerHTML = `<div class="avatar-wrapper"><img src="${avatar}"></div><span class="username-text">${currentUsername}</span>`;
+        if(welcomePrompt) welcomePrompt.textContent = "已就绪，点击下方场景开始面试模拟";
         initSessions();
+        if(sessions.length === 0 || !activeSessionId) {
+          chatArea.innerHTML = '';
+          appendMessage("你好！我是AI面试助手，选择下方面试场景，即可开始专属模拟训练～", "ai");
+        }
       } else {
-        loginOverlay.classList.remove("hidden");
+        document.getElementById("unloggedBtns").style.display = "flex";
+        document.getElementById("loggedBtns").style.display = "none";
+        loginOverlay.classList.add("hidden");
         userDisplay.textContent = "";
         sessions = [];
         sessionList.innerHTML = "";
+        if(welcomePrompt) welcomePrompt.textContent = "请先登录开始对话";
         chatArea.innerHTML = '<div class="small-footer">请先登录开始对话。</div>';
       }
     }
+
+    document.getElementById("navLoginBtn").addEventListener("click", () => {
+      loginOverlay.classList.remove("hidden");
+      loginBox.classList.remove("hidden");
+      registerBox.classList.add("hidden");
+    });
+    document.getElementById("navRegBtn").addEventListener("click", () => {
+      loginOverlay.classList.remove("hidden");
+      loginBox.classList.add("hidden");
+      registerBox.classList.remove("hidden");
+    });
+
+    // Option to dismiss login overlay by clicking background
+    loginOverlay.addEventListener("click", (e) => {
+      if (e.target === loginOverlay) {
+        loginOverlay.classList.add("hidden");
+      }
+    });
 
     gotoRegisterBtn.onclick = () => {
       loginBox.classList.add("hidden");
