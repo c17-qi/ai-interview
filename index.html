@@ -136,21 +136,43 @@
       gap: 10px;
       align-items: flex-end;
     }
-    .input-container-row textarea {
+    .textarea-wrapper {
       flex: 1;
+      position: relative;
+      display: flex;
+    }
+    .textarea-wrapper textarea {
+      flex: 1;
+      width: 100%;
       max-height: 120px;
       min-height: 48px;
       resize: none;
       border-radius: 12px;
       border: 1px solid #cae2eb;
-      padding: 12px 14px;
+      padding: 12px 40px 12px 14px; /* extra right padding for STT button */
       font-size: 0.95rem;
       font-family: inherit;
       background: #fff;
       box-shadow: inset 0 1px 3px rgba(0,0,0,.04);
       transition: all 0.2s;
     }
-    .input-container-row textarea:focus { outline: none; border-color: #82b9d5; box-shadow: 0 0 0 3px rgba(130,185,213,0.15); }
+    .textarea-wrapper textarea:focus { outline: none; border-color: #82b9d5; box-shadow: 0 0 0 3px rgba(130,185,213,0.15); }
+    .stt-in-input {
+      position: absolute;
+      right: 8px;
+      bottom: 8px;
+      background: transparent;
+      border: none;
+      color: #729eb3;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 6px;
+      border-radius: 50%;
+      transition: all 0.2s;
+    }
+    .stt-in-input:hover { background: #e8eff3; color: #1569ab; }
     
     .controls {
       display: flex;
@@ -235,6 +257,8 @@
     .end-call-btn:hover { background: #cf1322; transform: translateY(-2px); }
     @media(max-width:600px){
       body { background: #fff; padding: 0; margin: 0; }
+      .user-tag { max-width: 60px; padding: 4px 8px; }
+      .logout-btn { padding: 4px 8px; font-size: 0.8rem; }
       .page { 
         margin: 0; 
         width: 100%; 
@@ -292,7 +316,15 @@
     }
     .icon-btn:hover { background: #e8eff3; color: #1569ab; }
     .icon-btn svg { width: 20px; height: 20px; }
-    .user-tag { font-size: 0.9rem; color: #1569ab; font-weight: 600; background: #ebf6ff; padding: 4px 12px; border-radius: 20px; margin-left: 4px; }
+    .user-tag { 
+      font-size: 0.9rem; color: #1569ab; font-weight: 600; background: #ebf6ff; padding: 4px 12px; border-radius: 20px; margin-left: 4px;
+      max-width: 100px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      display: inline-block;
+      vertical-align: middle;
+    }
     .logout-btn { 
       background: transparent; color: #d32f2f; border: 1px solid #ffccc7; 
       padding: 5px 12px; border-radius: 20px; cursor: pointer; font-size: 0.8rem; font-weight: bold; transition: 0.2s;
@@ -405,9 +437,6 @@
     </div>
     <section class="input-wrapper">
       <div class="input-actions-bar">
-        <button class="icon-btn" id="sttBtn" title="语音输入" style="width: auto; height: auto;">
-          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>
-        </button>
         <button class="icon-btn" id="muteBtn" title="静音 (关闭语音播报)" style="width: auto; height: auto;">
           <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
         </button>
@@ -416,7 +445,12 @@
         </button>
       </div>
       <div class="input-container-row">
-        <textarea id="userInput" placeholder="说点什么... 回车发送"></textarea>
+        <div class="textarea-wrapper">
+          <textarea id="userInput" placeholder="说点什么... 回车发送"></textarea>
+          <button class="stt-in-input" id="sttBtn" title="语音输入">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>
+          </button>
+        </div>
         <button id="sendBtn">发送</button>
       </div>
       <div class="bottom-row">
