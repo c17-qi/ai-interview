@@ -154,7 +154,7 @@
     }
     .bottom-btn { background: #fff; border: 1px solid #cae2eb; color: #5a7185; box-shadow: none; font-weight: normal; padding: 6px 12px; font-size: 0.85rem;}
     .bottom-btn:hover { background: #f0f6fa; border-color: #a5cddf; color: #1569ab; box-shadow: none; }
-    .bottom-row { display: flex; justify-content: space-between; align-items: center; margin-top: 4px;}
+      .bottom-row { display: flex; justify-content: space-between; align-items: center; margin-top: 4px; grid-column: 1 / -1; }
     .status {
       font-size: 0.82rem;
       color: #4f7c93;
@@ -208,11 +208,23 @@
     }
     .end-call-btn:hover { background: #cf1322; transform: translateY(-2px); }
     @media(max-width:600px){
-      .page { margin: 14px 8px 10px; }
+      body { background: #fff; padding: 0; margin: 0; }
+      .page { 
+        margin: 0; 
+        width: 100%; 
+        border-radius: 0; 
+        min-height: 100dvh; 
+        max-height: 100dvh; 
+        box-shadow: none;
+      }
+      .header { padding: 12px 14px; }
       .header h1 { font-size: 1.1rem; }
-      .chat-round { width: 60px;height:60px; }
-      .input-wrapper { grid-template-columns: 1fr auto; padding: 8px; }
-      .input-wrapper button { font-size: 0.9rem; padding:8px 14px; }
+      .chat-round { width: 60px; height: 60px; }
+      .input-wrapper { grid-template-columns: 1fr auto; padding: 10px 12px; gap: 8px; }
+      .input-wrapper button { font-size: 0.95rem; padding: 10px 16px; }
+      .quick-prompts { padding: 10px 12px 8px; }
+      .login-box, .register-box { width: 90%; max-width: 320px; padding: 25px 20px; }
+      .sidebar { width: 80%; left: -100%; max-width: 280px; }
     }
     .login-overlay {
       position: fixed; inset: 0; background: rgba(246, 250, 252, 0.9);
