@@ -92,20 +92,19 @@
       margin-top:4px;display:block;
     }
     .quick-prompts {
-      display: flex; gap: 8px; overflow-x: auto; padding: 10px 12px 0; background: #f9feff;
-      scrollbar-width: none;
+      display: flex; gap: 8px; overflow-x: auto; padding: 12px 16px 10px; background: #f9feff;
+      scrollbar-width: none; flex-shrink: 0; border-top: 1px solid #e6edf1;
     }
     .quick-prompts::-webkit-scrollbar { display: none; }
     .prompt-chip {
       white-space: nowrap; font-size: 0.85rem; color: #1569ab; background: #e8eff3;
       padding: 6px 12px; border-radius: 16px; cursor: pointer; transition: 0.2s;
-      border: 1px solid transparent;
+      border: 1px solid transparent; flex-shrink: 0;
     }
     .prompt-chip:hover { background: #d0e4ef; border-color: #b0d0e3; transform: translateY(-1px); }
 
     .input-wrapper {
-      border-top: 1px solid #e6edf1;
-      padding: 10px 12px 12px;
+      padding: 6px 16px 16px;
       background: #f9feff;
       display: grid;
       grid-template-columns: 1fr auto;
@@ -310,7 +309,7 @@
       <span class="prompt-chip">🗣️ 英语口语测试</span>
       <span class="prompt-chip">👨‍🏫 教资结构化</span>
       <span class="prompt-chip">🏢 国企面试</span>
-      <span class="prompt-chip">💻 字节跳动研发岗</span>
+      <span class="prompt-chip">🎓 考研复试面试</span>
     </div>
     <section class="input-wrapper">
       <textarea id="userInput" placeholder="说点什么... 回车发送"></textarea>
