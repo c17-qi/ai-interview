@@ -418,11 +418,11 @@
     <div class="login-box hidden" id="registerBox">
       <h2>注册 新账号</h2>
       <div class="avatar-grid" id="regAvatarGrid">
-        <div class="avatar-opt selected" data-avatar="avatars/21A35E72DE6FBE82A71682285B121BDC.png"><img src="avatars/21A35E72DE6FBE82A71682285B121BDC.png" alt="dog1"></div>
-        <div class="avatar-opt" data-avatar="avatars/3E16E282FEDF6A40633FA8B8FFE6F0DF.png"><img src="avatars/3E16E282FEDF6A40633FA8B8FFE6F0DF.png" alt="dog2"></div>
-        <div class="avatar-opt" data-avatar="avatars/64CF685321AB2EE1FDAD019DC0E78DEA.png"><img src="avatars/64CF685321AB2EE1FDAD019DC0E78DEA.png" alt="dog3"></div>
-        <div class="avatar-opt" data-avatar="avatars/6E8B9214F6D1C887397008D6C43D9305.png"><img src="avatars/6E8B9214F6D1C887397008D6C43D9305.png" alt="dog4"></div>
-        <div class="avatar-opt" data-avatar="avatars/D827DFB784CEAE35790B79BEBBE5F17D.png"><img src="avatars/D827DFB784CEAE35790B79BEBBE5F17D.png" alt="dog5"></div>
+        <div class="avatar-opt selected" data-avatar="avatars/3D8FDB3D1303708D0110612885746166.png"><img src="avatars/3D8FDB3D1303708D0110612885746166.png" alt="dog1"></div>
+        <div class="avatar-opt" data-avatar="avatars/DE97A1DE366F6FCAA473385AD0571877.png"><img src="avatars/DE97A1DE366F6FCAA473385AD0571877.png" alt="dog2"></div>
+        <div class="avatar-opt" data-avatar="avatars/F55F8F5738AF0F3930D341474C391029.png"><img src="avatars/F55F8F5738AF0F3930D341474C391029.png" alt="dog3"></div>
+        <div class="avatar-opt" data-avatar="avatars/F58D8330C23A9B77650CED99B3779086.png"><img src="avatars/F58D8330C23A9B77650CED99B3779086.png" alt="dog4"></div>
+        <div class="avatar-opt" data-avatar="avatars/F5BD6C6DEC30A2F25F0FCE1CF2A1FAF5.png"><img src="avatars/F5BD6C6DEC30A2F25F0FCE1CF2A1FAF5.png" alt="dog5"></div>
       </div>
       <input type="text" id="regUsername" placeholder="设置新用户名" />
       <input type="password" id="regPassword" placeholder="设置密码 (最少4位)" />
@@ -855,7 +855,7 @@
         isVoiceMode = true;
         voiceOverlay.classList.remove("hidden");
         let userAvatars = JSON.parse(localStorage.getItem('ai_users_avatar') || '{}');
-        let avatar = userAvatars[currentUsername] || "avatars/21A35E72DE6FBE82A71682285B121BDC.png";
+        let avatar = userAvatars[currentUsername] || "avatars/3D8FDB3D1303708D0110612885746166.png";
         voiceAvatar.innerHTML = '<img src="' + avatar + '" alt="avatar">';
         startRec();
       });
@@ -888,7 +888,7 @@
     const registerBtnUI = document.getElementById("registerBtn");
     const userDisplay = document.getElementById("userDisplay");
     
-    let selectedAvatar = "avatars/21A35E72DE6FBE82A71682285B121BDC.png";
+    let selectedAvatar = "avatars/3D8FDB3D1303708D0110612885746166.png";
     document.querySelectorAll("#regAvatarGrid .avatar-opt").forEach(opt => {
       opt.addEventListener("click", () => {
         document.querySelectorAll("#regAvatarGrid .avatar-opt").forEach(o => o.classList.remove("selected"));
@@ -995,7 +995,7 @@
       if (currentUsername) {
         loginOverlay.classList.add("hidden");
         let userAvatars = JSON.parse(localStorage.getItem('ai_users_avatar') || '{}');
-        let avatar = userAvatars[currentUsername] || "avatars/21A35E72DE6FBE82A71682285B121BDC.png";
+        let avatar = userAvatars[currentUsername] || "avatars/3D8FDB3D1303708D0110612885746166.png";
         userDisplay.innerHTML = `<img src="` + avatar + `" class="user-avatar-disp" style="width:24px;height:24px;border-radius:50%;object-fit:cover;transform:scale(1.4);">` + currentUsername;
         initSessions();
       } else {
