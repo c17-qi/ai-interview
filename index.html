@@ -274,21 +274,24 @@
     .end-call-btn:hover { background: #cf1322; transform: translateY(-2px); }
     @media(max-width:600px){
       body { background: #fff; padding: 0; margin: 0; }
-      .user-tag { max-width: 90px; padding: 4px 8px 4px 4px; }
-      .logout-btn { padding: 4px 8px; font-size: 0.8rem; }
-      .page { 
-        margin: 0; 
-        width: 100%; 
-        border-radius: 0; 
-        min-height: 100dvh; 
-        max-height: 100dvh; 
+      .user-tag { max-width: 85px; padding: 4px 6px 4px 4px; gap: 4px; }
+      .user-tag .username-text { font-size: 0.8rem; }
+      .user-tag .avatar-wrapper { width: 20px; height: 20px; }
+      .logout-btn { padding: 4px 6px; font-size: 0.75rem; white-space: nowrap; flex-shrink: 0; }
+      .header-right { flex-shrink: 0; }
+      .page {
+        margin: 0;
+        width: 100%;
+        border-radius: 0;
+        min-height: 100dvh;
+        max-height: 100dvh;
         box-shadow: none;
       }
-      .header { padding: 10px 12px; gap: 6px; }
-      .header h1 { font-size: 1.05rem; white-space: nowrap; }
-      .header h1 svg { width: 20px; height: 20px; }
-      .header .tag { padding: 2px 6px; font-size: 0.7rem; white-space: nowrap; }
-      .menu-btn { margin-right: 0; width: 32px; height: 32px; }
+      .header { padding: 10px 8px; gap: 4px; flex-wrap: nowrap; overflow: hidden; }
+      .header h1 { font-size: 1rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .header h1 svg { width: 18px; height: 18px; margin-right: 2px; }
+      .header .tag { display: none; } /* 手机端隐藏标签以节省顶部空间 */
+      .menu-btn { margin-right: 0; width: 28px; height: 28px; flex-shrink: 0; }
       .header-right { gap: 2px; }
       .icon-btn { width: 32px; height: 32px; }
       .chat-round { width: 60px; height: 60px; }
@@ -349,8 +352,9 @@
       width: 100%; height: 100%; object-fit: cover; transform: scale(1.4); display: block;
     }
     .logout-btn {
-      background: transparent; color: #d32f2f; border: 1px solid #ffccc7; 
+      background: transparent; color: #d32f2f; border: 1px solid #ffccc7;
       padding: 5px 12px; border-radius: 20px; cursor: pointer; font-size: 0.8rem; font-weight: bold; transition: 0.2s;
+      white-space: nowrap; flex-shrink: 0;
     }
     .logout-btn:hover { background: #fff1f0; border-color: #ffa39e; }
     .sidebar {
