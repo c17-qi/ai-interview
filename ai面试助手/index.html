@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AI面试助手</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Segoe UI","PingFang SC","Helvetica Neue","Arial",sans-serif;
+      background: #f6fafc;
+      color: #222;
+      line-height: 1.5;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .page {
+      width: min(100%, 1000px);
+      display: flex;
+      flex-direction: column;
+      margin: 30px 12px 20px;
+      border-radius: 16px;
+      background: #fff;
+      box-shadow: 0 8px 24px rgba(0,0,0,.08);
+      overflow: hidden;
+      min-height: 80vh;
+      max-height: 92vh;
+    }
+    .header {
+      padding: 16px 20px;
+      border-bottom: 1px solid #e8eff3;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: #fbfeff;
+    }
+    .header h1 {
+      margin: 0;
+      font-size: 1.3rem;
+      color: #0c4a73;
+      font-weight: 600;
+    }
+    .header .tag {
+      border: 1px solid #c4def6;
+      color: #1569ab;
+      background: #ebf6ff;
+      border-radius: 999px;
+      padding: 2px 10px;
+      font-size: 0.75rem;
+    }
+    .chat-area {
+      flex: 1;
+      overflow-y: auto;
+      background: linear-gradient(180deg,#f7fcff 0%,#edf7fc 100%);
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .chat-round {
+      margin: 0 auto 10px;
+      width: 70px;
+      height: 70px;
+      border-radius: 50%;
+      background: #c7e7f4;
+      border: 2px solid #d8ecf3;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      color: #176488;
+      font-size: 1.4rem;
+      font-weight: 700;
+    }
+    .message {display: flex; gap: 8px; width: fit-content; max-width: 85%; }
+    .message.ai { align-self: flex-start; }
+    .message.user { align-self: flex-end; flex-direction: row-reverse; }
+    .bubble {
+      display: inline-block;
+      padding: 11px 13px;
+      border-radius: 14px;
+      font-size: 0.96rem;
+      color: #1e2a31;
+      word-break: break-word;
+      white-space: pre-wrap;
+      line-height: 1.6;
+      box-shadow: 0 3px 6px rgba(19,36,50,.09);
+    }
+    .bubble.ai {
+      background: #f1f7fb;
+      border: 1px solid #dcebf5;
+    }
+    .bubble.user {
+      background: #d6eff5;
+      border: 1px solid #c6e6ef;
+    }
+    .bubble .small {
+      font-size: .78rem; color:#5a7185;
+      margin-top:4px;display:block;
+    }
+    .input-area {
+      border-top: 1px solid #e6edf1;
+      padding: 10px 12px 12px;
+      background: #f9feff;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      align-items: end;
+    }
+    .input-area textarea {
+      max-height: 120px;
+      min-height: 46px;
+      resize: none;
+      border-radius: 12px;
+      border: 1px solid #cae2eb;
+      padding: 10px 12px;
+      font-size: 0.95rem;
+      font-family: inherit;
+      background: #fff;
+      box-shadow: inset 0 1px 3px rgba(0,0,0,.05);
+    }
+    .controls {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: center;
+      margin-top: 8px;
+      padding: 0 10px 2px;
+    }
+    .controls label { font-size: 0.8rem; color: #2f4f5f; }
+    .controls input[type=range] { width: 90px; }
+    .input-area button, .bottom-btn {
+      border-radius: 10px;
+      border: 1px solid #82b9d5;
+      background: linear-gradient(180deg,#ffffff,#ddf2fb);
+      color: #165e86;
+      font-weight: 600;
+      cursor: pointer;
+      padding: 8px 14px;
+      transition: all .15s ease;
+    }
+    .input-area button:hover, .bottom-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 10px rgba(9,95,134,.2);
+    }
+    .bottom-row { display: flex; justify-content: space-between; align-items: center; margin-top: 4px;}
+    .status {
+      font-size: 0.82rem;
+      color: #4f7c93;
+      padding: 0 8px;
+    }
+    .small-footer {
+      font-size: 0.78rem;
+      color: #5f7f8f;
+      text-align: center;
+      margin: 6px 0 8px;
+    }
+    .hidden { display: none; }
+    .voice-overlay {
+      position: fixed; top:0; left:0; width:100vw; height:100vh;
+      background: rgba(246, 250, 252, 0.95);
+      backdrop-filter: blur(10px);
+      z-index: 999;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      transition: opacity 0.3s;
+    }
+    .voice-overlay.hidden { display: none; opacity: 0; pointer-events: none; }
+    .voice-avatar {
+      width: 120px; height: 120px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #c7e7f4, #82b9d5);
+      display: flex; justify-content: center; align-items: center;
+      color: #176488; font-size: 2.5rem; font-weight: bold;
+      border: 4px solid #fff;
+      box-shadow: 0 10px 30px rgba(23,100,136,.2);
+      margin-bottom: 30px;
+    }
+    .pulse-anim { animation: pulse 2s infinite; }
+    .pulse-fast { animation: pulse 1s infinite; }
+    @keyframes pulse {
+      0% { box-shadow: 0 0 0 0 rgba(130,185,213,0.6); }
+      70% { box-shadow: 0 0 0 30px rgba(130,185,213,0); }
+      100% { box-shadow: 0 0 0 0 rgba(130,185,213,0); }
+    }
+    .voice-status { font-size: 1.2rem; color: #165e86; margin-bottom: 50px; font-weight: 500; }
+    .end-call-btn {
+      background: #ff4d4f; color: #fff; border: none;
+      padding: 12px 30px; border-radius: 30px; font-size: 1.1rem;
+      cursor: pointer; box-shadow: 0 6px 16px rgba(255,77,79,.3);
+      transition: all 0.2s;
+    }
+    .end-call-btn:hover { background: #cf1322; transform: translateY(-2px); }
+    @media(max-width:600px){
+      .page { margin: 14px 8px 10px; }
+      .header h1 { font-size: 1.1rem; }
+      .chat-round { width: 60px;height:60px; }
+      .input-area { grid-template-columns: 1fr auto; padding: 8px; }
+      .input-area button { font-size: 0.9rem; padding:7px 12px; }
+    }
+    .login-overlay {
+      position: fixed; inset: 0; background: rgba(246, 250, 252, 0.9);
+      backdrop-filter: blur(5px);
+      z-index: 1000; display: flex; align-items: center; justify-content: center;
+      transition: opacity 0.3s;
+    }
+    .login-overlay.hidden { display: none; opacity: 0; pointer-events: none; }
+    .login-box {
+      background: #fff; width: 340px; padding: 35px 30px; border-radius: 16px;
+      box-shadow: 0 10px 40px rgba(0,0,0,.1); text-align: center;
+    }
+    .login-box h2 { color: #0c4a73; margin: 0 0 24px; font-size: 1.5rem; letter-spacing: 1px; }
+    .login-box input {
+      width: 100%; padding: 12px 14px; margin-bottom: 16px; border-radius: 10px;
+      border: 1px solid #cae2eb; font-size: 1rem; outline: none; background: #fafcff;
+    }
+    .login-box input:focus { border-color: #82b9d5; background: #fff; box-shadow: 0 0 0 3px rgba(130,185,213,0.15); }
+    .login-box button {
+      width: 100%; padding: 12px; border-radius: 10px; font-size: 1.05rem; font-weight: bold;
+      cursor: pointer; border: none; transition: 0.2s; margin-bottom: 12px;
+    }
+    .btn-login { background: #1569ab; color: #fff; box-shadow: 0 4px 12px rgba(21,105,171,.2); }
+    .btn-login:hover { background: #11578f; transform: translateY(-1px); }
+    .btn-reg { background: #e8eff3; color: #1569ab; }
+    .btn-reg:hover { background: #dce7ee; }
+    .header-right { margin-left: auto; display: flex; align-items: center; gap: 12px; }
+    .user-tag { font-size: 0.9rem; color: #1569ab; font-weight: 600; background: #ebf6ff; padding: 4px 12px; border-radius: 20px; }
+    .logout-btn { 
+      background: transparent; color: #d32f2f; border: 1px solid #ffccc7; 
+      padding: 5px 12px; border-radius: 20px; cursor: pointer; font-size: 0.8rem; font-weight: bold; transition: 0.2s;
+    }
+    .logout-btn:hover { background: #fff1f0; border-color: #ffa39e; }
+  </style>
+</head>
+<body>
+  <div id="loginOverlay" class="login-overlay hidden">
+    <div class="login-box">
+      <h2>登录 面试助手</h2>
+      <input type="text" id="loginUsername" placeholder="请输入用户名" />
+      <input type="password" id="loginPassword" placeholder="请输入密码 (最少4位)" />
+      <button class="btn-login" id="loginBtn">登 录</button>
+      <button class="btn-reg" id="registerBtn">注 册 新 账 号</button>
+    </div>
+  </div>
+  <div id="voiceOverlay" class="voice-overlay hidden">
+    <div class="voice-avatar pulse-anim" id="voiceAvatar">AI</div>
+    <div class="voice-status" id="voiceStatus">正在连接...</div>
+    <button class="end-call-btn" id="endCallBtn">结束通话</button>
+  </div>
+  <main class="page">
+    <header class="header">
+      <div class="chat-round" title="AI面试助手">AI</div>
+      <h1>AI面试助手</h1>
+      <span class="tag">面试+模拟问答</span>
+      <div class="header-right">
+        <span class="user-tag" id="userDisplay"></span>
+        <button class="logout-btn" id="logoutBtn">退出登录</button>
+      </div>
+    </header>
+    <section id="chatArea" class="chat-area">
+      <div class="small-footer">欢迎使用，输入你的面试方向或具体问题，AI会自动识别场景。回车发送。</div>
+    </section>
+    <section class="input-area">
+      <textarea id="userInput" placeholder="说点什么... （例如：银行面试，自我介绍或英语口语）"></textarea>
+      <button id="sendBtn">发送</button>
+      <div class="bottom-row">
+        <span class="status" id="statusLabel">空闲</span>
+        <div class="controls">
+          <label>语音<input type="checkbox" id="speechToggle" checked></label>
+          <label>语速 <span id="rateVal">1.0</span><input id="speechRate" type="range" min="0.7" max="2" step="0.1" value="1"></label>
+          <button class="bottom-btn" id="micBtn">🎤 开启语音通话</button>
+          <button class="bottom-btn" id="clearBtn">清空</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const chatArea = document.getElementById("chatArea");
+    const input = document.getElementById("userInput");
+    const sendBtn = document.getElementById("sendBtn");
+    const statusLabel = document.getElementById("statusLabel");
+    const speechToggle = document.getElementById("speechToggle");
+    const speechRate = document.getElementById("speechRate");
+    const rateVal = document.getElementById("rateVal");
+    const micBtn = document.getElementById("micBtn");
+    const clearBtn = document.getElementById("clearBtn");
+    const voiceOverlay = document.getElementById("voiceOverlay");
+    const voiceStatus = document.getElementById("voiceStatus");
+    const voiceAvatar = document.getElementById("voiceAvatar");
+    const endCallBtn = document.getElementById("endCallBtn");
+
+    let recognition;
+    let isLoading = false;
+    let isVoiceMode = false;
+
+    function setVoiceStatus(text) { voiceStatus.textContent = text; }
+
+    const domainKeywords = [
+      {keys: ["银行","信用卡","理财","金融"], lang:"zh", note:"银行/金融面试"},
+      {keys: ["考公","公务员","事业单位"], lang:"zh", note:"公考面试"},
+      {keys: ["考研","研究生"], lang:"zh", note:"考研面试"},
+      {keys: ["教资","教师资格","讲师"], lang:"zh", note:"教资面试"},
+      {keys: ["国企","国有企业"], lang:"zh", note:"国企面试"},
+      {keys: ["求职","简历","岗位","面试"], lang:"zh", note:"求职面试"},
+      {keys: ["英语口语","English","英语"], lang:"en", note:"英语口语练习"},
+    ];
+
+    function appendMessage(text, who="ai", saveHistory=true) {
+      const wrapper = document.createElement("div");
+      wrapper.className = "message " + who;
+      const bubble = document.createElement("div");
+      bubble.className = "bubble " + who;
+      bubble.textContent = text;
+      wrapper.appendChild(bubble);
+      chatArea.appendChild(wrapper);
+      chatArea.scrollTop = chatArea.scrollHeight;
+
+      if (saveHistory && currentUsername) {
+        // 不保存加载中的状态气泡
+        if (text !== "正在生成回答…") {
+          let history = JSON.parse(localStorage.getItem('ai_chat_history_' + currentUsername) || '[]');
+          history.push({role: who, content: text});
+          localStorage.setItem('ai_chat_history_' + currentUsername, JSON.stringify(history));
+        }
+      }
+    }
+
+    function setStatus(text){
+      statusLabel.textContent = text;
+    }
+
+    function detectScenario(content){
+      const lower = content.toLowerCase();
+      for (const item of domainKeywords){
+        for (const kw of item.keys){
+          if (lower.includes(kw.toLowerCase())){
+            return item;
+          }
+        }
+      }
+      return {lang:"zh", note:"通用面试"};
+    }
+
+    function getAIMessagePrompt(msg){
+      const sceneInfo = detectScenario(msg);
+      const isEnglish = sceneInfo.lang === "en";
+      if(isEnglish){
+        return `\n你是面试助理，请用英文回答，并给出英语口语建议。\n用户问题：${msg}\n要求：1) 回答自然流畅，可用于口语模拟。2) 简明。3) 可给出对话练习问题。\n`;
+      } else {
+        return `\n你是面试助理，请用中文回答并结合场景提供有针对性的建议。\n场景：${sceneInfo.note}\n用户问题：${msg}\n要求：1) 回答清晰，适合面试模拟。2) 有扩展提问（示例问题）。3) 各场景要求中文。\n`;
+      }
+    }
+
+    async function queryChatGpt(question){
+      setStatus("AI 正在思考...");
+      const prompt = getAIMessagePrompt(question);
+
+      // 这里写上你的 API Key / API Host
+      const API_KEY = "sk-e2ac4dc6fedf4385a0f5aaf61ed4657f";
+      // 使用阿里云百炼（DashScope）的 OpenAI 兼容接口，因为我们下面用的就是 OpenAI 格式的请求体
+      const API_HOST = "https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions";
+      // 仅示例：请根据最新通义千问接口地址调整
+      const headers = {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer " + API_KEY
+      };
+      const body = {
+        model: "qwen-turbo",
+        temperature: 0.9,
+        top_p: 0.95,
+        max_tokens: 1200,
+        messages: [
+          {role:"system", content:"你是一个友好、专业的AI面试助手。"},
+          {role:"user", content: prompt }
+        ]
+      };
+
+      try {
+        const resp = await fetch(API_HOST, {
+          method: "POST",
+          headers,
+          body: JSON.stringify(body)
+        });
+        if (!resp.ok) {
+          const errText = await resp.text();
+          throw new Error(`HTTP ${resp.status} ${resp.statusText} // ${errText}`);
+        }
+        const data = await resp.json();
+        let content = "";
+        if (data?.choices && data.choices[0]?.message?.content) {
+          content = data.choices[0].message.content.trim();
+        } else if (data?.data?.[0]?.content) {
+          content = data.data[0].content.trim();
+        } else if (data?.result?.[0]?.content) {
+          content = data.result[0].content.trim();
+        }
+        if (!content) content = "[AI 未返回内容，请检查 API 设置]";
+        return content;
+      } catch (e) {
+        console.error(e);
+        return "出错了：" + e.message;
+      } finally {
+        setStatus("空闲");
+      }
+    }
+
+    function speakText(text, voiceLang="zh-CN"){
+      if(!speechToggle.checked || !window.speechSynthesis) {
+        if(isVoiceMode) setTimeout(()=>{ startRec(); }, 500);
+        return;
+      }
+      window.speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(text);
+      u.rate = Number(speechRate.value) || 1;
+      u.lang = voiceLang;
+      u.onstart = () => {
+        if(isVoiceMode) {
+          setVoiceStatus("AI 说话中...");
+          voiceAvatar.className = "voice-avatar pulse-fast";
+        }
+      };
+      u.onend = () => { if(isVoiceMode) setTimeout(()=>{ startRec(); }, 300); };
+      u.onerror = () => { if(isVoiceMode) setTimeout(()=>{ startRec(); }, 300); };
+      window.speechSynthesis.speak(u);
+    }
+
+    function startRec() {
+      if(!recognition || isLoading || window.speechSynthesis.speaking || !isVoiceMode) return;
+      try { 
+        recognition.start(); 
+        setVoiceStatus("🎙️ 正在聆听，请说话..."); 
+        voiceAvatar.className = "voice-avatar pulse-anim";
+      } catch(e){}
+    }
+
+    async function doSend(evtOrOverrideText){
+      if(isLoading) return;
+      const text = typeof evtOrOverrideText === 'string' ? evtOrOverrideText.trim() : input.value.trim();
+      if(!text) return;
+      appendMessage(text,"user");
+      if(typeof evtOrOverrideText !== 'string') input.value = "";
+      const scenario = detectScenario(text);
+      const aiLang = scenario.lang === "en" ? "en-US" : "zh-CN";
+      isLoading = true;
+      setStatus("加载中...");
+      if(isVoiceMode) {
+        setVoiceStatus("AI 思考中...");
+        voiceAvatar.className = "voice-avatar";
+      }
+      appendMessage("正在生成回答…","ai");
+      try{
+        const aiReply = await queryChatGpt(text);
+        const lastMsg = Array.from(chatArea.querySelectorAll(".message.ai")).pop();
+        if(lastMsg && lastMsg.textContent.includes("正在生成回答")) {
+          lastMsg.remove();
+        }
+        appendMessage(aiReply,"ai");
+        speakText(aiReply, aiLang);
+      } catch(e) {
+        appendMessage("调用失败：" + e.message,"ai");
+      }
+      isLoading = false;
+      setStatus("空闲");
+    }
+
+    sendBtn.addEventListener("click", doSend);
+    input.addEventListener("keydown", (e)=>{ if(e.key==="Enter" && !e.shiftKey){ e.preventDefault(); doSend(); }});
+    speechRate.addEventListener("input", ()=> { rateVal.textContent = speechRate.value; });
+
+    clearBtn.addEventListener("click", ()=>{
+      chatArea.innerHTML = '<div class="small-footer">已清空。继续输入新的问题。</div>';
+      setStatus("空闲");
+      if (currentUsername) {
+        localStorage.removeItem('ai_chat_history_' + currentUsername);
+      }
+    });
+
+    if ("SpeechRecognition" in window || "webkitSpeechRecognition" in window) {
+      const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+      recognition = new SpeechRec();
+      recognition.lang = "zh-CN";
+      recognition.interimResults = false;
+      recognition.maxAlternatives = 1;
+      recognition.continuous = false;
+      recognition.onresult = (event) => {
+        const transcript = Array.from(event.results).map(r=>r[0].transcript).join('');
+        if(isVoiceMode) {
+          doSend(transcript);
+        } else {
+          input.value = transcript;
+          doSend();
+        }
+      };
+      recognition.onerror = (event) => {
+        if(event.error !== "no-speech" && event.error !== "aborted"){
+           setStatus("语音识别失败：" + event.error);
+           if(isVoiceMode) setVoiceStatus("识别失败，请重试");
+        }
+      };
+      recognition.onend = ()=>{
+        if (isVoiceMode && !isLoading && !window.speechSynthesis.speaking) {
+           setTimeout(startRec, 500); 
+        } else if (!isVoiceMode && !isLoading) {
+           setStatus("空闲");
+        }
+      };
+      micBtn.addEventListener("click", () => {
+        isVoiceMode = true;
+        voiceOverlay.classList.remove("hidden");
+        startRec();
+      });
+      endCallBtn.addEventListener("click", () => {
+        isVoiceMode = false;
+        voiceOverlay.classList.add("hidden");
+        recognition.stop();
+        if(window.speechSynthesis) window.speechSynthesis.cancel();
+        setStatus("已退出语音通话，记录已保存");
+      });
+    } else {
+      micBtn.disabled = true;
+      micBtn.title = "浏览器不支持语音识别";
+    }
+
+    window.addEventListener("beforeunload", ()=>{ if(window.speechSynthesis) window.speechSynthesis.cancel();});
+
+    // ========== 登录注册与历史记忆逻辑 ==========
+    const loginOverlay = document.getElementById("loginOverlay");
+    const loginUsername = document.getElementById("loginUsername");
+    const loginPassword = document.getElementById("loginPassword");
+    const loginBtnUI = document.getElementById("loginBtn");
+    const registerBtnUI = document.getElementById("registerBtn");
+    const userDisplay = document.getElementById("userDisplay");
+    const logoutBtn = document.getElementById("logoutBtn");
+
+    let currentUsername = localStorage.getItem('ai_current_user') || "";
+
+    function loadHistory() {
+      chatArea.innerHTML = '<div class="small-footer">欢迎使用，输入你的面试方向或具体问题，AI会自动识别场景。回车发送。</div>';
+      let history = JSON.parse(localStorage.getItem('ai_chat_history_' + currentUsername) || '[]');
+      history.forEach(item => {
+        // false 代表只显示不重复存数据库
+        appendMessage(item.content, item.role, false);
+      });
+    }
+
+    function checkLoginState() {
+      if (currentUsername) {
+        loginOverlay.classList.add("hidden");
+        userDisplay.textContent = `你好, ${currentUsername}`;
+        loadHistory();
+      } else {
+        loginOverlay.classList.remove("hidden");
+        userDisplay.textContent = "";
+      }
+    }
+
+    loginBtnUI.onclick = () => {
+      const u = loginUsername.value.trim();
+      const p = loginPassword.value.trim();
+      if(!u || !p) return alert("请输入用户名和密码！");
+      const users = JSON.parse(localStorage.getItem('ai_users_db') || '{}');
+      if(users[u] === p) {
+        currentUsername = u;
+        localStorage.setItem('ai_current_user', u);
+        loginUsername.value = ""; loginPassword.value = "";
+        checkLoginState();
+      } else {
+        alert("用户名或密码错误，请重试！");
+      }
+    };
+
+    registerBtnUI.onclick = () => {
+      const u = loginUsername.value.trim();
+      const p = loginPassword.value.trim();
+      if(!u || p.length < 4) return alert("请输入用户名和至少4位密码！");
+      const users = JSON.parse(localStorage.getItem('ai_users_db') || '{}');
+      if(users[u]) return alert("该用户名已被注册，请直接登录！");
+      
+      // 注册逻辑
+      users[u] = p;
+      localStorage.setItem('ai_users_db', JSON.stringify(users));
+      alert("注册成功！马上为您自动登录。");
+      
+      currentUsername = u;
+      localStorage.setItem('ai_current_user', u);
+      loginUsername.value = ""; loginPassword.value = "";
+      checkLoginState();
+    };
+
+    logoutBtn.onclick = () => {
+      currentUsername = "";
+      localStorage.removeItem('ai_current_user');
+      checkLoginState();
+    };
+
+    // 初始化页面时检查状态
+    checkLoginState();
+
+  </script>
+</body>
+</html>
